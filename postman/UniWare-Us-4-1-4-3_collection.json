@@ -263,7 +263,7 @@
       "description": "Run folder 5 first so {{category_id}}/{{location_id}} are populated. Leaves an active Provider1 session and a real {{equipment_id}} for folders 7-10."
     },
     {
-      "name": "11 - US4-1",
+      "name": "11 - US4-1-4-3",
       "item": [
         {
           "name": "Scope 1",
@@ -1593,7 +1593,7 @@
           "description": "Scope 6 : login as `borrower3` because this account have borrow_request that status is `Approved`\n\nwe checking for overlaped"
         }
       ],
-      "description": "run 5,6 first\n\nscope 1 cover US4-1\n\nscope 2,3 cover US4-3\n\nscope 4 cover US4-2"
+      "description": "run 5,6 first\n\nscope 1 cover US4-1\n\nscope 2,3 cover US4-3\n\nscope 4,5,6 cover US4-2"
     }
   ],
   "event": [
