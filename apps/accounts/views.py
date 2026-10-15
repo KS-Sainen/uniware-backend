@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.middleware.csrf import get_token
@@ -9,7 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .exceptions import InvalidCredentials
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import LoginSerializer, RegisterSerializer, UserSerializer, UserRoleUpdateSerializer
+
+from apps.common.permissions import IsAdmin
+from .models import User
 
 
 class RegisterView(APIView):
@@ -66,3 +70,24 @@ class MeView(APIView):
     @extend_schema(responses={200: UserSerializer})
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+class UserManagementView(APIView):
+    """US8-1, US8-2"""
+
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        users = User.objects.all().order_by("email")
+        return Response(UserSerializer(users, many=True).data)
+
+    def patch(self, request, user_id):
+        target = get_object_or_404(User, id=user_id)
+        if target.id == request.user.id and request.data.get("is_admin") is False:
+            return Response(
+                {"detail": "You cannot remove your own admin role."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = UserRoleUpdateSerializer(target, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserSerializer(target).data, status=status.HTTP_200_OK)
