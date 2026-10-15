@@ -75,3 +75,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, style={"input_type": "password"})
+
+
+class UserRoleUpdateSerializer(serializers.ModelSerializer):
+    """Restrict admin user management to capability flags only."""
+
+    class Meta:
+        model = User
+        fields = ["is_admin", "is_provider", "is_borrower"]
+
+    def validate(self, attrs):
+        if not any(key in attrs for key in self.fields):
+            raise serializers.ValidationError("At least one role must be supplied.")
+        return attrs
