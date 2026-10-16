@@ -43,8 +43,19 @@ class BorrowRequestSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        pickup_date = attrs.get("pickup_date")
-        due_date = attrs.get("due_date")
+        """US4-4"""
+        # Ensure edits are only allowed when the request is in PENDING state
+        if self.instance and self.instance.status != BorrowRequest.StatusChoices.PENDING:
+            raise serializers.ValidationError(
+                {"non_field_errors": "Only pending borrow requests can be edited."}
+            )
+
+        if self.instance:
+            pickup_date = attrs.get("pickup_date", self.instance.pickup_date)
+            due_date = attrs.get("due_date", self.instance.due_date)
+        else:
+            pickup_date = attrs.get("pickup_date")
+            due_date = attrs.get("due_date")
         equipment = attrs.get("equipment")
 
         if equipment:
@@ -55,7 +66,8 @@ class BorrowRequestSerializer(serializers.ModelSerializer):
                     {"equipment_id": "This equipment is currently not available for borrowing."}
                 )
 
-        if pickup_date and due_date and due_date < pickup_date:
-            raise serializers.ValidationError({"due_date": "due_date must be on or after pickup_date."})
+        if attrs.get("pickup_date") or attrs.get("due_date"):
+            if pickup_date > due_date:
+                raise serializers.ValidationError({"due_date": "due_date must be on or after pickup_date."})
 
         return attrs
